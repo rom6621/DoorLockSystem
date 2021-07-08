@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+</head>
+<body>
+    
+<div class="container">
+    <div class="bg-light p-3 p-sm-5 my-4 rounded">
+        <h1 class="display-4">ドアのロックを制御します</h1>
+        <p class="lead" id="status-block" class="bg-success" style="color: white;">現在の状態: <span id="status">解錠中</span></p>
+        <hr class="my-4">
+        <button class="btn btn-success btn-lg" id="open_btn" >解錠</button>
+        <button class="btn btn-danger btn-lg" id="close_btn" >施錠</button>
+        <button hidden id="bell_btn">呼び出し</button>
+        <audio src="music/bell.mp3" id="bell_sound" ></audio>
+    </div>
+</div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+
+    const socketio = io.connect();
+    const open_btn = document.getElementById('open_btn');
+    const close_btn = document.getElementById('close_btn');
+    const bell_btn = document.getElementById('bell_btn');
+    const status_block = document.getElementById('status-block');
+    const status = document.getElementById('status');
+
+    socketio.emit('request_status');
+
+    open_btn.addEventListener('click', function() {
+        socketio.emit('open');
+    });
+
+    close_btn.addEventListener('click', function() {
+        socketio.emit('close');
+    });
+
+    bell_btn.addEventListener('click', async function() {
+        await document.getElementById('bell_sound').play();
+    });
+    
+    socketio.on('ring_bell', async function() {
+        await document.getElementById('bell_sound').play();
+    });
+
+    socketio.on('response_status', function(args) {
+        if(args.status == "open") {
+            status_block.classList.add("bg-success");
+            status_block.classList.remove("bg-danger")
+            status.textContent = "解錠中";
+        } else if(args.status == "close") {
+            status_block.classList.add("bg-danger");
+            status_block.classList.remove("bg-success")
+            status.textContent = "施錠中";
+        }
+    })
+
+
+
+</script>
+</body>
+</html>
